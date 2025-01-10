@@ -37,4 +37,60 @@ fn main() {
     // println!("random word: {}", secret_word);
 
     // Your code here! :)
+    println!("Welcome to CS110L Hangman!");
+    let mut incorrect_guesses = 0;
+    let mut known_chars = vec!['-'; secret_word_chars.len()];
+    let mut guessed_letters = Vec::new();
+    while incorrect_guesses < NUM_INCORRECT_GUESSES {
+        print!("The word so far is ");
+        for i in known_chars.iter() {
+            print!("{}", i);
+        }
+        println!();
+        print!("You have guessed the following letters: ");
+        for i in guessed_letters.iter() {
+            print!("{}", i);
+        }
+        println!();
+        println!("You have {} guesses left", NUM_INCORRECT_GUESSES - incorrect_guesses);
+        print!("Please guess a letter: ");
+        io::stdout()
+            .flush()
+            .expect("Error flushing stdout.");
+        let mut guess = String::new();
+        io::stdin()
+            .read_line(&mut guess)
+            .expect("Error reading line.");
+        let guess_char = guess.as_bytes()[0] as char;
+        guessed_letters.push(guess_char);
+        let mut in_string = false;
+        let mut idx = 0;
+        while idx < known_chars.len() {
+            if guess_char == secret_word_chars[idx] {
+                known_chars[idx] = guess_char;
+                in_string = true;
+            }
+            idx += 1;
+        }
+        if !in_string {
+            incorrect_guesses += 1;
+            println!("Sorry, that letter is not in the word");
+        }
+        println!();
+        let mut remain_unknown = false;
+        for i in known_chars.iter() {
+            if *i == '-' {
+                remain_unknown = true;
+                break;
+            }
+        }
+        if !remain_unknown {
+            break;
+        }
+    }
+    if incorrect_guesses < NUM_INCORRECT_GUESSES {
+        println!("Congratulations you guessed the secret word: {}!", secret_word);
+    } else {
+        println!("Sorry, you ran out of guesses!");
+    }
 }

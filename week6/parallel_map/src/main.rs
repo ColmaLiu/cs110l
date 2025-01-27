@@ -9,6 +9,30 @@ where
 {
     let mut output_vec: Vec<U> = Vec::with_capacity(input_vec.len());
     // TODO: implement parallel map!
+    output_vec.resize_with(input_vec.len(), Default::default);
+    let mut threads = Vec::new();
+    let (sender1, receiver1) = crossbeam_channel::unbounded();
+    let (sender2, receiver2) = crossbeam_channel::unbounded();
+    for _ in 0..num_threads {
+        let receiver1 = receiver1.clone();
+        let sender2 = sender2.clone();
+        threads.push(thread::spawn(move || {
+            while let Ok((index, val)) = receiver1.recv() {
+                sender2.send((index, f(val))).unwrap();
+            }
+        }));
+    }
+    for (index, val) in input_vec.into_iter().enumerate() {
+        sender1.send((index, val)).unwrap();
+    }
+    drop(sender1);
+    drop(sender2);
+    while let Ok((index, val)) = receiver2.recv() {
+        output_vec[index] = val;
+    }
+    for thread in threads {
+        thread.join().unwrap();
+    }
     output_vec
 }
 
